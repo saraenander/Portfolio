@@ -1,0 +1,108 @@
+def student_move(board):
+    """
+    TODO: Implement your min-max alpha-beta pruning algorithm here.
+    Give it whatever input arguments you think are necessary
+    (and change where it is called).
+    The function should return a move from 0-6
+    """
+
+    def evaluateArray(array):
+        if (array == 0).sum() == 4:
+            return 0
+
+        nbrOfPos = (array == 1).sum()
+        nbrOfNeg = (array == -1).sum()
+
+        if nbrOfPos > 0 and nbrOfNeg > 0:
+            return 0
+        elif nbrOfPos == 4:
+            return np.inf
+        elif nbrOfNeg == 4:
+            return -10 ** 6
+        elif nbrOfPos > 0:
+            return 5 ** nbrOfPos
+        else:
+            return -5 ** nbrOfNeg
+
+    def evaluateBoard(board):
+        s = 0
+        for j in range(0, 7):
+            for i in range(0, 3):
+                val = evaluateArray(board[i:i + 4, j])
+                #s += val*np.abs(val)
+                s+=val
+
+        for j in range(0, 6):
+            for i in range(0, 4):
+                val = evaluateArray(board[j, i:i + 4])
+                #s += val*np.abs(val)
+                s+=val
+
+                # doing the diagonal
+        for i in range(5, 2, -1):
+            for j in range(0, 4):
+                array = np.array([board[i, j], board[i - 1, j + 1], board[i - 2, j + 2], board[i - 3, j + 3]])
+                val = evaluateArray(array)
+                #s += val*np.abs(val)
+                s+=val
+
+        for i in range(0, 3):
+            for j in range(0, 4):
+                array = np.array([board[i, j], board[i + 1, j + 1], board[i + 2, j + 2], board[i + 3, j + 3]])
+                val = evaluateArray(array)
+                #s += val*np.abs(val)
+                s+=val
+        return s
+
+    def makeBoard(board, col, val):
+        row = 5
+        while (board[row, col] != 0):
+            if (row == 0):
+                return -1
+            row -= 1
+        board[row, col] = val
+        return board
+
+    def alphaBeta_Decision(board, depth, alpha, beta, maximizing):
+        if (depth == 0):
+            eval = evaluateBoard(board)
+            #print(eval)
+            return [eval,9]
+
+        if (maximizing):
+            maxVal = -np.inf
+            choice = -1
+            for i in range(0, 7):
+                newBoard = makeBoard(board.copy(), i, 1)
+                if(isinstance(newBoard,int)):
+                    continue
+                oldMaxVal = maxVal
+                recursiveVal = alphaBeta_Decision(newBoard, depth - 1, alpha, beta, not maximizing)[0]
+                maxVal = np.max([maxVal, recursiveVal])
+                if(maxVal != oldMaxVal):
+                    choice = i
+                alpha = np.max([alpha, recursiveVal])
+                if(beta <= alpha):
+                    break
+            return [maxVal, choice]
+        else:
+            # minimizing
+            minVal = np.inf
+            choice = -1
+            for i in range(0, 7):
+                newBoard = makeBoard(board.copy(), i, -1)
+                if (isinstance(newBoard, int)):
+                    continue
+                oldMinVal = minVal
+                recursiveVal = alphaBeta_Decision(newBoard, depth - 1, alpha, beta, not maximizing)[0]
+                minVal = np.min([minVal, recursiveVal])
+                if(minVal != oldMinVal):
+                    choice = i
+                beta = np.min([beta, recursiveVal])
+                if beta <= alpha:
+                    break
+            return [minVal, choice]
+
+    ch = alphaBeta_Decision(board, 3, -np.inf, np.inf, True)[1]
+    print(ch)
+    return ch
